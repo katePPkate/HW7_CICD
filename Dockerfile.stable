@@ -1,0 +1,19 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py .
+COPY stable_ml_pipeline.py .
+
+RUN python stable_ml_pipeline.py
+
+ENV MODEL_PATH=models/stable_model.pkl
+ENV MODEL_TYPE=stable
+ENV MODEL_VERSION=v0.9.9
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]

@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  # Старая версия (stable)
+  stable:
+    image: stable-model:latest
+    container_name: stable
+    build:
+      context: .
+      dockerfile: Dockerfile.stable
+    environment:
+      MODEL_VERSION: "v0.9.9"
+      MODEL_TYPE: "stable"
+    ports:
+      - "5001:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  # Новая версия (canary)
+  canary:
+    image: canary-model:latest
+    container_name: canary
+    build:
+      context: .
+      dockerfile: Dockerfile.canary
+    environment:
+      MODEL_VERSION: "v1.0.0"
+      MODEL_TYPE: "canary"
+    ports:
+      - "5002:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  # Балансировщик Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_canary
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.10.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - stable
+      - canary
+    restart: always
